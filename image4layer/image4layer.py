@@ -7,8 +7,13 @@
     :license: MIT, see LICENSE for details.
 """
 # noinspection PyPackageRequirements
-from PIL import Image, ImageMath  # noqa
+try:
+    from PIL import Image, ImageMath  # noqa
+except ModuleNotFoundError:
+    pass
+
 from .version import VERSION
+
 try:
     from itertools import zip_longest
 except ImportError:
@@ -107,8 +112,9 @@ class Image4Layer(object):
         :type cs: Image.Image
         """
         return separate_blend(
-            cb, cs,
-            eval_str="min(a, 2 * b) * (b < 128) + max(a, 2 * (b - 128)) * (b >= 128)"
+            cb,
+            cs,
+            eval_str="min(a, 2 * b) * (b < 128) + max(a, 2 * (b - 128)) * (b >= 128)",
         )
 
     @staticmethod
@@ -322,8 +328,12 @@ def no_separate_blend(cb, cs, func):
     r = ImageMath.eval(
         "func((cbr, cbg, cbb), (csr, csg, csb))",
         func=func,
-        cbr=cb_pack[0], cbg=cb_pack[1], cbb=cb_pack[2],
-        csr=cs_pack[0], csg=cs_pack[1], csb=cs_pack[2],
+        cbr=cb_pack[0],
+        cbg=cb_pack[1],
+        cbb=cb_pack[2],
+        csr=cs_pack[0],
+        csg=cs_pack[1],
+        csb=cs_pack[2],
     )
     img = Image.merge("RGB", [ImageMath.imagemath_convert(c * 255, "L").im for c in r])
 
@@ -335,7 +345,7 @@ def lum(c):
     :type c: tuple(ImageMath._Operand)
     :rtype: ImageMath._Operand
     """
-    return (c[0] * .298912) + (c[1] * 0.586611) + (c[2] * 0.114478)
+    return (c[0] * 0.298912) + (c[1] * 0.586611) + (c[2] * 0.114478)
 
 
 def sat(c):
@@ -385,19 +395,13 @@ def clip_color(c):
     x_b_1 = ImageMath.imagemath_int(x > 1.0)
     l_m_n = l - n
     x_m_l = x - l
-    m_l = (1.0 - l)
+    m_l = 1.0 - l
 
     if bool(n_l_0):
-        c = [
-            (_c * (n_l_0 ^ 1)) + ((l + ((_c - l) * l / l_m_n)) * n_l_0)
-            for _c in c
-            ]
+        c = [(_c * (n_l_0 ^ 1)) + ((l + ((_c - l) * l / l_m_n)) * n_l_0) for _c in c]
 
     if bool(x_b_1):
-        c = [
-            (_c * (x_b_1 ^ 1)) + ((l + ((_c - l) * m_l / x_m_l)) * x_b_1)
-            for _c in c
-            ]
+        c = [(_c * (x_b_1 ^ 1)) + ((l + ((_c - l) * m_l / x_m_l)) * x_b_1) for _c in c]
 
     return c
 
@@ -469,7 +473,7 @@ def _color_burn(a, b):
     :type b: ImageMath._Operand
     :rtype: ImageMath._Operand
     """
-    non_zero_area = (b != 0)
+    non_zero_area = b != 0
     fa = a / 255.0
     fb = b / 255.0
     return (1.0 - ((1.0 - fa) / fb)) * 255.0 * non_zero_area
@@ -481,7 +485,7 @@ def _color_dodge(a, b):
     :type b: ImageMath._Operand
     :rtype: ImageMath._Operand
     """
-    zero_area = (b == 255)
+    zero_area = b == 255
     dodge = (a / (255 - b)) * 255.0
     return dodge + (zero_area * 255)
 
