@@ -8,6 +8,7 @@
 """
 # noinspection PyPackageRequirements
 from PIL import Image, ImageMath  # noqa
+from .version import VERSION
 try:
     from itertools import zip_longest
 except ImportError:
@@ -15,7 +16,7 @@ except ImportError:
 
 
 class Image4Layer(object):
-    __version__ = "0.43"
+    __version__ = VERSION
 
     @staticmethod
     def normal(cb, cs):

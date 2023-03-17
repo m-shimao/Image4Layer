@@ -1,3 +1,4 @@
 from .image4layer import Image4Layer
+from .version import VERSION
 
-__version__ = Image4Layer.__version__
+__version__ = VERSION
